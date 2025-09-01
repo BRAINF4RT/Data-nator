@@ -1,7 +1,5 @@
 name: ResearchBot Workflow
 on:
-  schedule:
-    - cron: "0 0 * * *"  # runs daily
   workflow_dispatch:
 
 jobs:
