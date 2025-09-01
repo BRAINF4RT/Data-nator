@@ -5,8 +5,8 @@ from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
 class ResearchBot:
     def __init__(self):
         # Initialize LLMs
-        self.querier_llm = OpenRouterLLM(model="querier-model", api_key=OPENROUTER_API_KEY)
-        self.researcher_llm = OpenRouterLLM(model="researcher-model", api_key=OPENROUTER_API_KEY)
+        self.querier_llm = OpenRouterLLM(model="openrouter/openai/gpt-oss-20b:free", api_key=OPENROUTER_API_KEY)
+        self.researcher_llm = OpenRouterLLM(model="openrouter/openai/gpt-oss-20b:free", api_key=OPENROUTER_API_KEY)
         # Initialize DDGS
         self.ddgs = DDGS()
 
