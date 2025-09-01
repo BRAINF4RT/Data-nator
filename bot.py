@@ -131,7 +131,7 @@ class ResearchBot:
         {sources_text}
         """
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b:free",  # keep same model you used
+            model="microsoft/mai-ds-r1:free",  # keep same model you used
             messages=[{"role": "system", "content": "You are a research assistant."},
                       {"role": "user", "content": prompt}],
         )
