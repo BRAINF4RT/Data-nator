@@ -1,4 +1,4 @@
 fastapi
 uvicorn
 ddgs
-openrouter
+openai
