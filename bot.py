@@ -1,31 +1,32 @@
 import os
 import openai
 from ddgs import DDGS
-from config import DEFAULT_NUM_RESULTS
+from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
 
-# Read API key from environment
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-if not OPENROUTER_API_KEY:
-    raise ValueError("OPENROUTER_API_KEY environment variable not set.")
-
+# Set API key
 openai.api_key = OPENROUTER_API_KEY
+
+# Initialize DDGS
+ddgs = DDGS()
 
 class ResearchBot:
     def __init__(self):
-        self.ddgs = DDGS()
+        pass  # No instance variables needed since DDGS is global
 
     def generate_query(self, user_prompt: str) -> str:
-        prompt = f"Generate an optimized search query for this research question:\n{user_prompt}"
-        response = openai.Completion.create(
-            model="openrouter/openai/gpt-oss-20b:free",  # replace with your OpenRouter model ID
-            prompt=prompt,
+        response = openai.ChatCompletion.create(
+            model="openrouter/openai/gpt-oss-20b:free",
+            messages=[
+                {"role": "system", "content": "You are a query optimization assistant."},
+                {"role": "user", "content": f"Generate an optimized search query for this research question:\n{user_prompt}"}
+            ],
             max_tokens=100
         )
-        return response.choices[0].text.strip()
+        return response.choices[0].message.content.strip()
 
     def conduct_research(self, query: str, num_results: int = DEFAULT_NUM_RESULTS) -> list:
         results = []
-        for r in self.ddgs.text(query, max_results=num_results):
+        for r in ddgs.text(query, max_results=num_results):
             results.append({
                 "title": r.title,
                 "snippet": r.snippet,
@@ -36,12 +37,16 @@ class ResearchBot:
     def synthesize_research(self, user_prompt: str, research: list) -> str:
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
         prompt = f"Using the following research, answer the question:\n{user_prompt}\n\nResearch:\n{sources_text}"
-        response = openai.Completion.create(
-            model="openrouter/openai/gpt-oss-20b:free",  # same OpenRouter model
-            prompt=prompt,
+
+        response = openai.ChatCompletion.create(
+            model="openrouter/openai/gpt-oss-20b:free",
+            messages=[
+                {"role": "system", "content": "You are a research assistant."},
+                {"role": "user", "content": prompt}
+            ],
             max_tokens=500
         )
-        return response.choices[0].text.strip()
+        return response.choices[0].message.content.strip()
 
     def run(self, user_prompt: str = None, auto: bool = True):
         if auto and not user_prompt:
