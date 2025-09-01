@@ -18,12 +18,13 @@ class ResearchBot:
 
     def generate_query(self, user_prompt: str) -> str:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b:free",
+            model="mistralai/mistral-7b-instruct:free",
             messages=[
-                {"role": "system", "content": "You are a query optimization assistant."},
-                {"role": "user", "content": f"Generate an optimized search query for this research question:\n{user_prompt}"}
+                {"role": "system", "content": "You are a query optimization assistant. Return only a single concise search query."},
+                {"role": "user", "content": f"Generate a DuckDuckGo search query for: {user_prompt}"}
             ],
-            max_tokens=100
+            max_tokens=50,
+            temperature=0
         )
         return response.choices[0].message.content.strip()
 
