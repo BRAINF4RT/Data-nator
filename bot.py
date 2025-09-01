@@ -31,9 +31,9 @@ class ResearchBot:
         results = []
         for r in ddgs.text(query, max_results=num_results):
             results.append({
-                "title": r.title,
-                "snippet": r.snippet,
-                "link": r.url
+                "title": r.get("title", ""),
+                "snippet": r.get("body", ""),   # note: ddgs uses "body" for snippet
+                "link": r.get("href", "")
             })
         return results
 
