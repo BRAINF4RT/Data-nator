@@ -29,23 +29,30 @@ class ResearchBot:
         )
         return response.choices[0].message.content.strip()
 
-    def conduct_research(self, query: str, num_results: int = DEFAULT_NUM_RESULTS) -> list:
-        try:
-            results = ddgs.text(query, max_results=num_results)
-            research = []
-            for r in results:
-                if "body" in r:
-                    research.append({
-                        "title": r.get("title", ""),
-                        "snippet": r.get("body", ""),
-                        "link": r.get("href", "")
-                    })
-            return research
-        except Exception as e:
-            print(f"Error conducting research: {e}")
-            return []
-        finally:
-            time.sleep(1)
+    import time
+
+def conduct_research(self, query: str, max_results: int = 50, log_raw: bool = False):
+    all_results = []
+    seen_urls = set()
+    try:
+        for r in ddgs.text(query, max_results=max_results):
+            link = r.get("href") or r.get("url")
+            if link and link not in seen_urls:
+                title = r.get("title") or (r.get("text")[:50] if r.get("text") else "No title")
+                snippet = r.get("body") or (r.get("text")[:150] if r.get("text") else "No snippet")
+                all_results.append({
+                    "title": title,
+                    "snippet": snippet,
+                    "link": link
+                })
+                seen_urls.add(link)
+        if log_raw:
+            print(f"[RAW SEARCH] Query: '{query}' | Results fetched: {len(all_results)}")
+    except Exception as e:
+        print(f"Error conducting research: {e}")
+    finally:
+        time.sleep(1)  # simple rate-limit between queries
+    return all_results
 
     def synthesize_research(self, user_prompt: str, research: list) -> str:
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
