@@ -6,16 +6,16 @@ from ddgs import DDGS
 import uvicorn
 from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
 
-# Initialize OpenAI client
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+# Ensure API key is set
 if not OPENROUTER_API_KEY:
-    raise ValueError("OPENROUTER_API_KEY environment variable not set.")
+    raise ValueError("OPENROUTER_API_KEY is not set in config.py or environment.")
 
 # Initialize OpenAI client for OpenRouter
 client = OpenAI(
     api_key=OPENROUTER_API_KEY,
     base_url="https://openrouter.ai/api/v1"
 )
+
 # Initialize DDGS
 ddgs = DDGS()
 app = FastAPI()
