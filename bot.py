@@ -1,3 +1,4 @@
+import time
 import os
 from openai import OpenAI
 from ddgs import DDGS
@@ -29,14 +30,22 @@ class ResearchBot:
         return response.choices[0].message.content.strip()
 
     def conduct_research(self, query: str, num_results: int = DEFAULT_NUM_RESULTS) -> list:
-        results = []
-        for r in ddgs.text(query, max_results=num_results):
-            results.append({
-                "title": r.get("title", ""),
-                "snippet": r.get("body", ""),   # note: ddgs uses "body" for snippet
-                "link": r.get("href", "")
-            })
-        return results
+        try:
+            results = ddgs.text(query, max_results=num_results)
+            research = []
+            for r in results:
+                if "body" in r:
+                    research.append({
+                        "title": r.get("title", ""),
+                        "snippet": r.get("body", ""),
+                        "link": r.get("href", "")
+                    })
+            return research
+        except Exception as e:
+            print(f"Error conducting research: {e}")
+            return []
+        finally:
+            time.sleep(1)
 
     def synthesize_research(self, user_prompt: str, research: list) -> str:
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
