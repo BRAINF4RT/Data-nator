@@ -132,7 +132,7 @@ User question: {user_prompt}
 """
         try:
             response = client.chat.completions.create(
-                model="microsoft/mai-ds-r1:free",
+                model="google/gemini-2.0-flash-exp:free",
                 messages=[
                     {"role": "system", "content": "You are a research assistant."},
                     {"role": "user", "content": prompt}
