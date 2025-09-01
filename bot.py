@@ -27,7 +27,7 @@ class ResearchBot:
         response = client.chat.completions.create(
             model="mistralai/mistral-7b-instruct:free",
             messages=[
-                {"role": "system", "content": "You are a query optimization assistant. Return only a single concise search query."},
+                {"role": "system", "content": "You are a query optimization assistant. Try to avoid words that would bring up unhelpful information and structure your output as a search query someone would use to look somethingup. Ensure to return only a single concise search query."},
                 {"role": "user", "content": f"Generate a DuckDuckGo search query for: {user_prompt}"}
             ],
             max_tokens=50,
@@ -80,7 +80,6 @@ class ResearchBot:
                 {"role": "system", "content": "You are a research assistant."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=500
         )
         return response.choices[0].message.content.strip()
 
