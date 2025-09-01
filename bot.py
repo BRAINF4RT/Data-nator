@@ -118,7 +118,7 @@ class ResearchBot:
     # -----------------------------
     # Synthesize research
     # -----------------------------
-     def synthesize_research(self, user_prompt: str, research: list) -> str:
+    def synthesize_research(self, user_prompt: str, research: list) -> str:
         """Summarize research using OpenRouter + user context."""
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
         manual_context = self.read_context()
