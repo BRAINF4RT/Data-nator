@@ -50,15 +50,13 @@ class ResearchBot:
         results = []
         if not os.path.exists(self.custom_sources_file):
             return results
-
         with open(self.custom_sources_file, "r", encoding="utf-8") as f:
             urls = [line.strip() for line in f if line.strip()]
-
         for url in urls:
             try:
                 r = requests.get(url, timeout=5)
                 r.raise_for_status()
-                text = r.text[:2000]  # truncate to avoid huge inputs
+                text = r.text
                 results.append({
                     "title": url,
                     "snippet": text,
@@ -75,13 +73,11 @@ class ResearchBot:
         """Combine DuckDuckGo text/news search results with custom URLs."""
         all_results = []
         seen_urls = set()
-
         # --- Load custom sources first ---
         custom_results = self.load_custom_sources()
         for r in custom_results:
             all_results.append(r)
             seen_urls.add(r["link"])
-
         try:
             # --- DDGS text results ---
             for r in ddgs.text(query, max_results=max_results):
@@ -93,7 +89,6 @@ class ResearchBot:
                         "link": link
                     })
                     seen_urls.add(link)
-
             # --- DDGS news results ---
             for r in ddgs.news(query, max_results=max_results):
                 link = r.get("href") or r.get("url")
@@ -104,15 +99,12 @@ class ResearchBot:
                         "link": link
                     })
                     seen_urls.add(link)
-
             if log_raw:
                 print(f"[RAW SEARCH] Query: '{query}' | Total results: {len(all_results)}")
-
         except Exception as e:
             print(f"[Error] conducting research: {e}")
         finally:
             time.sleep(1)  # rate-limit
-
         return all_results[:max_results]
 
     # -----------------------------
@@ -122,7 +114,6 @@ class ResearchBot:
         """Summarize research using OpenRouter."""
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
         prompt = f"Using the following research, thoroughly answer the question:\n{user_prompt}\n\nResearch:\n{sources_text}"
-
         response = client.chat.completions.create(
             model="openai/gpt-oss-20b:free",
             messages=[
@@ -141,7 +132,6 @@ class ResearchBot:
             if not auto_prompts:
                 print("[Info] No auto-prompts found. Exiting auto mode.")
                 return []
-
             results = []
             for p in auto_prompts:
                 query = self.generate_query(p)
@@ -149,7 +139,6 @@ class ResearchBot:
                 answer = self.synthesize_research(p, research)
                 results.append({"prompt": p, "query": query, "answer": answer})
             return results
-
         elif user_prompt:
             query = self.generate_query(user_prompt)
             research = self.conduct_research(query)
