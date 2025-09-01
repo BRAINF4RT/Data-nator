@@ -4,15 +4,13 @@ from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
 from ddgs import DDGS
 import uvicorn
+from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
 
-# API key from environment
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-if not OPENROUTER_API_KEY:
-    raise ValueError("OPENROUTER_API_KEY environment variable not set.")
-
+# Set API key
 openai.api_key = OPENROUTER_API_KEY
-ddgs = DDGS()
 
+# Initialize DDGS
+ddgs = DDGS()
 app = FastAPI()
 
 HTML_TEMPLATE = """
@@ -31,17 +29,18 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Generate an optimized search query
 def generate_query(user_prompt: str) -> str:
-    response = openai.Completion.create(
+    response = openai.ChatCompletion.create(
         model="openrouter/openai/gpt-oss-20b:free",
-        prompt=f"Generate an optimized search query for this research question:\n{user_prompt}",
+        messages=[
+            {"role": "system", "content": "You are a query optimization assistant."},
+            {"role": "user", "content": f"Generate an optimized search query for this research question:\n{user_prompt}"}
+        ],
         max_tokens=100
     )
-    return response.choices[0].text.strip()
+    return response.choices[0].message.content.strip()
 
-# Conduct research via DDGS
-def conduct_research(query: str, num_results: int = 5) -> list:
+def conduct_research(query: str, num_results: int = DEFAULT_NUM_RESULTS) -> list:
     results = []
     for r in ddgs.text(query, max_results=num_results):
         results.append({
@@ -51,18 +50,20 @@ def conduct_research(query: str, num_results: int = 5) -> list:
         })
     return results
 
-# Synthesize research into a final answer
 def synthesize_research(user_prompt: str, research: list) -> str:
     sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
     prompt = f"Using the following research, answer the question:\n{user_prompt}\n\nResearch:\n{sources_text}"
-    response = openai.Completion.create(
+
+    response = openai.ChatCompletion.create(
         model="openrouter/openai/gpt-oss-20b:free",
-        prompt=prompt,
+        messages=[
+            {"role": "system", "content": "You are a research assistant."},
+            {"role": "user", "content": prompt}
+        ],
         max_tokens=500
     )
-    return response.choices[0].text.strip()
+    return response.choices[0].message.content.strip()
 
-# Routes
 @app.get("/", response_class=HTMLResponse)
 def read_form():
     return HTML_TEMPLATE.format(result="")
