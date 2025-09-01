@@ -1,10 +1,9 @@
 import time
-import os
 from openai import OpenAI
 from ddgs import DDGS
 from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
 
-# Initialize OpenAI client for OpenRouter (only once)
+# Initialize OpenAI client for OpenRouter
 client = OpenAI(
     api_key=OPENROUTER_API_KEY,
     base_url="https://openrouter.ai/api/v1"
@@ -29,30 +28,28 @@ class ResearchBot:
         )
         return response.choices[0].message.content.strip()
 
-    import time
-
-def conduct_research(self, query: str, max_results: int = 50, log_raw: bool = False):
-    all_results = []
-    seen_urls = set()
-    try:
-        for r in ddgs.text(query, max_results=max_results):
-            link = r.get("href") or r.get("url")
-            if link and link not in seen_urls:
-                title = r.get("title") or (r.get("text")[:50] if r.get("text") else "No title")
-                snippet = r.get("body") or (r.get("text")[:150] if r.get("text") else "No snippet")
-                all_results.append({
-                    "title": title,
-                    "snippet": snippet,
-                    "link": link
-                })
-                seen_urls.add(link)
-        if log_raw:
-            print(f"[RAW SEARCH] Query: '{query}' | Results fetched: {len(all_results)}")
-    except Exception as e:
-        print(f"Error conducting research: {e}")
-    finally:
-        time.sleep(1)  # simple rate-limit between queries
-    return all_results
+    def conduct_research(self, query: str, max_results: int = 50, log_raw: bool = False):
+        all_results = []
+        seen_urls = set()
+        try:
+            for r in ddgs.text(query, max_results=max_results):
+                link = r.get("href") or r.get("url")
+                if link and link not in seen_urls:
+                    title = r.get("title") or (r.get("text")[:50] if r.get("text") else "No title")
+                    snippet = r.get("body") or (r.get("text")[:150] if r.get("text") else "No snippet")
+                    all_results.append({
+                        "title": title,
+                        "snippet": snippet,
+                        "link": link
+                    })
+                    seen_urls.add(link)
+            if log_raw:
+                print(f"[RAW SEARCH] Query: '{query}' | Results fetched: {len(all_results)}")
+        except Exception as e:
+            print(f"Error conducting research: {e}")
+        finally:
+            time.sleep(1)  # simple rate-limit between queries
+        return all_results
 
     def synthesize_research(self, user_prompt: str, research: list) -> str:
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
@@ -83,6 +80,4 @@ def conduct_research(self, query: str, max_results: int = 50, log_raw: bool = Fa
             return results
         elif user_prompt:
             query = self.generate_query(user_prompt)
-            research = self.conduct_research(query)
-            answer = self.synthesize_research(user_prompt, research)
-            return {"prompt": user_prompt, "query": query, "answer": answer}
+            research = self.conduct_research(quer_
