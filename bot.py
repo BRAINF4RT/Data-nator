@@ -25,7 +25,15 @@ class ResearchBot:
             return []
         with open(self.autoprompts_file, "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
-
+    # -----------------------------
+    # Manual Context
+    # -----------------------------
+    def read_context(self, context_file="context.txt"):
+        """Read user-provided manual context from a .txt file."""
+        if not os.path.exists(context_file):
+            return ""
+        with open(context_file, "r", encoding="utf-8") as f:
+            return f.read().strip()
     # -----------------------------
     # Generate optimized query
     # -----------------------------
