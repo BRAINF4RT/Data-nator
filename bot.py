@@ -40,10 +40,10 @@ class ResearchBot:
     def generate_query(self, user_prompt: str) -> str:
         """Generate a concise DuckDuckGo search query using OpenRouter."""
         response = client.chat.completions.create(
-            model="mistralai/mistral-7b-instruct:free",
+            model="qwen/qwen3-4b:free",
             messages=[
                 {"role": "system", "content": "You are a query optimization assistant. Return a single concise search query optimized for DuckDuckGo."},
-                {"role": "user", "content": f"Generate a DuckDuckGo search query for: {user_prompt}"}
+                {"role": "user", "content": f"You must ONLY output the search query. Generate a DuckDuckGo search query for: {user_prompt}"}
             ],
             max_tokens=50,
             temperature=0
