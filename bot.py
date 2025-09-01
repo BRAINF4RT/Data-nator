@@ -80,4 +80,4 @@ class ResearchBot:
             return results
         elif user_prompt:
             query = self.generate_query(user_prompt)
-            research = self.conduct_research(quer_
+            research = self.conduct_research(query)
