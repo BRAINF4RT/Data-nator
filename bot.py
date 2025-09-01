@@ -118,8 +118,10 @@ class ResearchBot:
     # -----------------------------
     # Synthesize research
     # -----------------------------
-    def synthesize_research(self, user_prompt: str, research: list) -> str:
+     def synthesize_research(self, user_prompt: str, research: list) -> str:
         """Summarize research using OpenRouter + user context."""
+        if not research:
+            return "[Warning] No research results available to synthesize."
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
         manual_context = self.read_context()
         prompt = f"""
@@ -130,13 +132,19 @@ class ResearchBot:
         --- Web Research ---
         {sources_text}
         """
-        response = client.chat.completions.create(
-            model="microsoft/mai-ds-r1:free",  # keep same model you used
-            messages=[{"role": "system", "content": "You are a research assistant."},
-                      {"role": "user", "content": prompt}],
-        )
+        try:
+            response = client.chat.completions.create(
+                model="microsoft/mai-ds-r1:free",
+                messages=[
+                    {"role": "system", "content": "You are a research assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+            )
+        except Exception as e:
+            return f"[Error] Model request failed: {e}"
+        if not response or not getattr(response, "choices", None):
+            return "[Error] No response from model."
         return response.choices[0].message.content.strip()
-
     # -----------------------------
     # Run bot
     # -----------------------------
