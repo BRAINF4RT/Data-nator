@@ -1,20 +1,20 @@
 import os
-import openai
+from openai import OpenAI
 from ddgs import DDGS
 from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
 
-# Set API key
-openai.api_key = OPENROUTER_API_KEY
+# Initialize OpenAI client
+client = OpenAI(api_key=OPENROUTER_API_KEY)
 
 # Initialize DDGS
 ddgs = DDGS()
 
 class ResearchBot:
     def __init__(self):
-        pass  # No instance variables needed since DDGS is global
+        pass
 
     def generate_query(self, user_prompt: str) -> str:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="openrouter/openai/gpt-oss-20b:free",
             messages=[
                 {"role": "system", "content": "You are a query optimization assistant."},
@@ -38,7 +38,7 @@ class ResearchBot:
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
         prompt = f"Using the following research, answer the question:\n{user_prompt}\n\nResearch:\n{sources_text}"
 
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="openrouter/openai/gpt-oss-20b:free",
             messages=[
                 {"role": "system", "content": "You are a research assistant."},
