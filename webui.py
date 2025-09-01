@@ -38,7 +38,7 @@ HTML_TEMPLATE = """
 
 def generate_query(user_prompt: str) -> str:
     response = client.chat.completions.create(
-        model="openrouter/openai/gpt-oss-20b:free",
+        model="openai/gpt-oss-20b:free",
         messages=[
             {"role": "system", "content": "You are a query optimization assistant."},
             {"role": "user", "content": f"Generate an optimized search query for this research question:\n{user_prompt}"}
@@ -62,7 +62,7 @@ def synthesize_research(user_prompt: str, research: list) -> str:
     prompt = f"Using the following research, answer the question:\n{user_prompt}\n\nResearch:\n{sources_text}"
 
     response = client.chat.completions.create(
-        model="openrouter/openai/gpt-oss-20b:free",
+        model="openai/gpt-oss-20b:free",
         messages=[
             {"role": "system", "content": "You are a research assistant."},
             {"role": "user", "content": prompt}
