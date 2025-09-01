@@ -120,18 +120,16 @@ class ResearchBot:
     # -----------------------------
      def synthesize_research(self, user_prompt: str, research: list) -> str:
         """Summarize research using OpenRouter + user context."""
-        if not research:
-            return "[Warning] No research results available to synthesize."
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
         manual_context = self.read_context()
         prompt = f"""
-        You are a research assistant.
-        User question: {user_prompt}
-        --- User Context (manual notes) ---
-        {manual_context if manual_context else "No extra context provided."}
-        --- Web Research ---
-        {sources_text}
-        """
+You are a research assistant.
+User question: {user_prompt}
+--- User Context (manual notes) ---
+{manual_context if manual_context else "No extra context provided."}
+--- Web Research ---
+{sources_text}
+"""
         try:
             response = client.chat.completions.create(
                 model="microsoft/mai-ds-r1:free",
