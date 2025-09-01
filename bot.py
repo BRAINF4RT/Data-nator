@@ -1,6 +1,6 @@
 import os
 import time
-import random
+import requests
 from ddgs import DDGS
 from openai import OpenAI
 from config import OPENROUTER_API_KEY
@@ -11,9 +11,13 @@ ddgs = DDGS()
 
 
 class ResearchBot:
-    def __init__(self, autoprompts_file="auto_prompts.txt"):
+    def __init__(self, autoprompts_file="auto_prompts.txt", custom_sources_file="custom_sources.txt"):
         self.autoprompts_file = autoprompts_file
+        self.custom_sources_file = custom_sources_file
 
+    # -----------------------------
+    # Auto-prompts
+    # -----------------------------
     def read_autoprompts(self):
         """Read auto prompts from a text file, one prompt per line."""
         if not os.path.exists(self.autoprompts_file):
@@ -22,12 +26,15 @@ class ResearchBot:
         with open(self.autoprompts_file, "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
 
+    # -----------------------------
+    # Generate optimized query
+    # -----------------------------
     def generate_query(self, user_prompt: str) -> str:
-        """Generate an optimized search query using OpenRouter."""
+        """Generate a concise DuckDuckGo search query using OpenRouter."""
         response = client.chat.completions.create(
             model="mistralai/mistral-7b-instruct:free",
             messages=[
-                {"role": "system", "content": "You are a query optimization assistant. Try to avoid words that would bring up unhelpful information and structure your output as a search query someone would use to look somethingup. Ensure to return only a single concise search query."},
+                {"role": "system", "content": "You are a query optimization assistant. Return a single concise search query optimized for DuckDuckGo."},
                 {"role": "user", "content": f"Generate a DuckDuckGo search query for: {user_prompt}"}
             ],
             max_tokens=50,
@@ -35,11 +42,48 @@ class ResearchBot:
         )
         return response.choices[0].message.content.strip()
 
+    # -----------------------------
+    # Load custom URLs
+    # -----------------------------
+    def load_custom_sources(self):
+        """Load URLs from a .txt file and fetch content."""
+        results = []
+        if not os.path.exists(self.custom_sources_file):
+            return results
+
+        with open(self.custom_sources_file, "r", encoding="utf-8") as f:
+            urls = [line.strip() for line in f if line.strip()]
+
+        for url in urls:
+            try:
+                r = requests.get(url, timeout=5)
+                r.raise_for_status()
+                text = r.text[:2000]  # truncate to avoid huge inputs
+                results.append({
+                    "title": url,
+                    "snippet": text,
+                    "link": url
+                })
+            except Exception as e:
+                print(f"[Warning] Failed to fetch {url}: {e}")
+        return results
+
+    # -----------------------------
+    # Conduct research
+    # -----------------------------
     def conduct_research(self, query: str, max_results: int = 50, log_raw: bool = False):
-        """Search DuckDuckGo for both text and news results."""
+        """Combine DuckDuckGo text/news search results with custom URLs."""
         all_results = []
         seen_urls = set()
+
+        # --- Load custom sources first ---
+        custom_results = self.load_custom_sources()
+        for r in custom_results:
+            all_results.append(r)
+            seen_urls.add(r["link"])
+
         try:
+            # --- DDGS text results ---
             for r in ddgs.text(query, max_results=max_results):
                 link = r.get("href") or r.get("url")
                 if link and link not in seen_urls:
@@ -50,7 +94,7 @@ class ResearchBot:
                     })
                     seen_urls.add(link)
 
-            # Include news results
+            # --- DDGS news results ---
             for r in ddgs.news(query, max_results=max_results):
                 link = r.get("href") or r.get("url")
                 if link and link not in seen_urls:
@@ -63,12 +107,17 @@ class ResearchBot:
 
             if log_raw:
                 print(f"[RAW SEARCH] Query: '{query}' | Total results: {len(all_results)}")
+
         except Exception as e:
-            print(f"Error conducting research: {e}")
+            print(f"[Error] conducting research: {e}")
         finally:
-            time.sleep(1)  # simple rate-limit
+            time.sleep(1)  # rate-limit
+
         return all_results[:max_results]
 
+    # -----------------------------
+    # Synthesize research
+    # -----------------------------
     def synthesize_research(self, user_prompt: str, research: list) -> str:
         """Summarize research using OpenRouter."""
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
@@ -79,15 +128,18 @@ class ResearchBot:
             messages=[
                 {"role": "system", "content": "You are a research assistant."},
                 {"role": "user", "content": prompt}
-            ],
+            ]
         )
         return response.choices[0].message.content.strip()
 
+    # -----------------------------
+    # Run bot
+    # -----------------------------
     def run(self, user_prompt: str = None, auto: bool = True):
         if auto and not user_prompt:
             auto_prompts = self.read_autoprompts()
             if not auto_prompts:
-                print("[Info] No autoprompts found. Exiting auto mode.")
+                print("[Info] No auto-prompts found. Exiting auto mode.")
                 return []
 
             results = []
@@ -97,6 +149,7 @@ class ResearchBot:
                 answer = self.synthesize_research(p, research)
                 results.append({"prompt": p, "query": query, "answer": answer})
             return results
+
         elif user_prompt:
             query = self.generate_query(user_prompt)
             research = self.conduct_research(query)
