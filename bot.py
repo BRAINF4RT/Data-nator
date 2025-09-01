@@ -1,18 +1,13 @@
 import os
 from openai import OpenAI
-from config import OPENROUTER_API_KEY
+from ddgs import DDGS
+from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
 
-# Initialize OpenAI client for OpenRouter
+# Initialize OpenAI client for OpenRouter (only once)
 client = OpenAI(
     api_key=OPENROUTER_API_KEY,
     base_url="https://openrouter.ai/api/v1"
 )
-
-from ddgs import DDGS
-from config import OPENROUTER_API_KEY, DEFAULT_NUM_RESULTS
-
-# Initialize OpenAI client
-client = OpenAI(api_key=OPENROUTER_API_KEY)
 
 # Initialize DDGS
 ddgs = DDGS()
