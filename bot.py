@@ -111,15 +111,21 @@ class ResearchBot:
     # Synthesize research
     # -----------------------------
     def synthesize_research(self, user_prompt: str, research: list) -> str:
-        """Summarize research using OpenRouter."""
+        """Summarize research using OpenRouter + user context."""
         sources_text = "\n".join([f"{r['title']}: {r['snippet']}" for r in research])
-        prompt = f"Using the following research, thoroughly answer the question:\n{user_prompt}\n\nResearch:\n{sources_text}"
+        manual_context = self.read_context()
+        prompt = f"""
+        You are a research assistant.
+        User question: {user_prompt}
+        --- User Context (manual notes) ---
+        {manual_context if manual_context else "No extra context provided."}
+        --- Web Research ---
+        {sources_text}
+        """
         response = client.chat.completions.create(
-            model="openai/gpt-oss-20b:free",
-            messages=[
-                {"role": "system", "content": "You are a research assistant."},
-                {"role": "user", "content": prompt}
-            ]
+            model="openai/gpt-oss-20b:free",  # keep same model you used
+            messages=[{"role": "system", "content": "You are a research assistant."},
+                      {"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content.strip()
 
