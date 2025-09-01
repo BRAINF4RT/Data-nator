@@ -124,6 +124,7 @@ class ResearchBot:
         manual_context = self.read_context()
         prompt = f"""
 You are a research assistant.
+Your answer must be as thorough as possible, as to prevent missing anything.
 User question: {user_prompt}
 --- User Context (manual notes) ---
 {manual_context if manual_context else "No extra context provided."}
