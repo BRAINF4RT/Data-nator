@@ -1,5 +1,1 @@
-https://www.metaculus.com/notebooks/38928/ai-benchmark-resources/
-https://www.metaculus.com/tournament/fall-aib-2025/
-https://www.metaculus.com/tournament/minibench/?status=pending_resolution
-https://github.com/Metaculus/metac-bot-template
-https://github.com/BRAINF4RT/forecastingbot
+
